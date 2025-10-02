@@ -1,8 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from "uuid";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "./ui/label";
+import { ArrowUpRight, CheckIcon, CopyIcon } from "lucide-react";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const durations: { label: string; value: number }[] = [
   { label: "1 Hour", value: 1 },
@@ -17,7 +36,16 @@ export default function UrlShortener() {
   const [duration, setDuration] = useState(1);
   const [shortUrl, setShortUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState(false);
 
+  const handleCopy = () => {
+    if (inputRef.current) {
+      navigator.clipboard.writeText(inputRef.current.value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
   const handleShorten = async () => {
     if (!originalUrl) return;
     setLoading(true);
@@ -47,48 +75,109 @@ export default function UrlShortener() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 border rounded-2xl shadow">
-      <h1 className="text-xl font-bold mb-4">URL Shortener</h1>
+    <div className="max-w-md mx-auto p-5 border rounded-xl">
+      <h1 className="text-xl text-center font-bold mb-4">URL Shortener</h1>
 
-      <input
-        type="url"
-        placeholder="Enter your URL"
-        value={originalUrl}
-        onChange={(e) => setOriginalUrl(e.target.value)}
-        className="w-full p-2 border rounded mb-3"
-      />
-
-      <select
-        value={duration}
-        onChange={(e) => setDuration(Number(e.target.value))}
-        className="w-full p-2 border rounded mb-3"
-      >
-        {durations.map((d) => (
-          <option key={d.value} value={d.value}>
-            {d.label}
-          </option>
-        ))}
-      </select>
-
-      <button
-        onClick={handleShorten}
-        disabled={loading}
-        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-      >
-        {loading ? "Generating..." : "Shorten"}
-      </button>
-
-      {shortUrl && (
-        <div className="mt-4">
-          <p className="text-sm">Your short link:</p>
-          <a
-            href={shortUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline"
+      <div className="grid gap-3">
+        <div className="flex gap-2">
+          <Input
+            type="url"
+            required
+            placeholder="Enter your URL"
+            value={originalUrl}
+            onChange={(e) => setOriginalUrl(e.target.value)}
+          />
+          <Select
+            value={duration.toString()}
+            onValueChange={(val) => setDuration(Number(val))}
           >
-            {shortUrl}
-          </a>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select duration" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {durations.map((d) => (
+                <SelectItem key={d.value} value={d.value.toString()}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button className="w-full" onClick={handleShorten} disabled={loading}>
+          {loading ? "Generating" : "Shorten"}
+          {loading && (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 animate-spin"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          )}
+        </Button>
+      </div>
+
+      {/* success UI */}
+      {shortUrl && (
+        <div className="mt-6 space-y-2">
+          <Label>Shortened link</Label>
+          <div className="flex gap-2">
+            <div className="relative w-full">
+              <Input
+                ref={inputRef}
+                className="pe-9"
+                type="text"
+                readOnly
+                value={shortUrl}
+              />
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleCopy}
+                      className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 hover:text-foreground transition"
+                      aria-label={copied ? "Copied" : "Copy to clipboard"}
+                      disabled={copied}
+                    >
+                      <div
+                        className={cn(
+                          "transition-all",
+                          copied ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                        )}
+                      >
+                        <CheckIcon className="stroke-emerald-500" size={16} />
+                      </div>
+                      <div
+                        className={cn(
+                          "absolute transition-all",
+                          copied ? "scale-0 opacity-0" : "scale-100 opacity-100"
+                        )}
+                      >
+                        <CopyIcon size={16} />
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="px-2 py-1 text-xs">
+                    Copy to clipboard
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Button size={"icon"} asChild>
+              <Link target="_blank" href={shortUrl}>
+                <ArrowUpRight />
+              </Link>
+            </Button>
+          </div>
         </div>
       )}
     </div>
