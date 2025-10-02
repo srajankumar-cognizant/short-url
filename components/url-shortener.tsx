@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from "uuid";
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -13,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "./ui/label";
-import { ArrowUpRight, CheckIcon, CopyIcon } from "lucide-react";
-import Link from "next/link";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { ArrowUpRight, CheckIcon, CopyIcon } from "lucide-react";
 
 const durations: { label: string; value: number }[] = [
   { label: "1 Hour", value: 1 },
@@ -46,6 +46,7 @@ export default function UrlShortener() {
       setTimeout(() => setCopied(false), 1500);
     }
   };
+
   const handleShorten = async () => {
     if (!originalUrl) return;
     setLoading(true);
@@ -75,9 +76,7 @@ export default function UrlShortener() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-5 border rounded-xl">
-      <h1 className="text-xl text-center font-bold mb-4">URL Shortener</h1>
-
+    <div className="flex py-10 flex-col gap-2 w-full mx-auto">
       <div className="grid gap-3">
         <div className="flex gap-2">
           <Input
